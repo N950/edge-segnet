@@ -6,6 +6,7 @@ from EdgeSegNet import EdgeSegNet
 from CamSeqDataset import CamSeqDataset, Util
 
 import tqdm
+import argparse
 import matplotlib.pyplot as plt
 
 def train_model(model,train_loader,validation_loader,optimizer,criterion,scheduler=None, n_epochs=4):
@@ -114,8 +115,57 @@ def train_model(model,train_loader,validation_loader,optimizer,criterion,schedul
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(
+        description='A Training script for EdgeSegNet :: https://arxiv.org/abs/1905.04222'
+    )
+
+    argparser.add_argument(
+        '--learning-rate',
+        metavar='lr',
+        default=0.001,
+        type=float,
+        help='initial learning rate for the Adam optimizer, scheduled by StepLR'
+    )
+
+    argparser.add_argument(
+        '--batch-size',
+        metavar='B',
+        default=16,
+        type=int,
+        help='Batch size for both train and validation, keep in mind the dataset has a total of 101 imgs only'
+    )
+
+    argparser.add_argument(
+        '--n_epochs',
+        metavar='N',
+        default=50,
+        type=int,
+        help='number of training epochs'
+    )
+
+    argparser.add_argument(
+        '--gamma',
+        metavar='G',
+        default=0.95,
+        type=float,
+        help='Multiplicative factor of learning rate decay'
+    )
+
+    argparser.add_argument(
+        '--scheduler-step',
+        metavar='S',
+        default=25,
+        type=int,
+        help='Scheduler step, each S epochs learning rate is updated'
+    )
+
+    args = argparser.parse_args()
     
-    print("\n**  Loading CamSeq Dataset ... **\n")
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    print("\n*** Device *** :: ",device)
+    print("\n**  Loading CamSeq Dataset... **\n")
     
     dataset = CamSeqDataset()
     
@@ -132,15 +182,31 @@ if __name__ == "__main__":
     
     train_set, val_set = torch.utils.data.random_split(dataset, [71, 30])
 
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=10, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(val_set, batch_size=10, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(
+        train_set, 
+        batch_size=args.batch_size, 
+        shuffle=True
+    )
+    test_loader = torch.utils.data.DataLoader(
+        val_set, 
+        batch_size=args.batch_size, 
+        shuffle=True
+    )
 
     ####################################### Model #######################################
     model = EdgeSegNet()
     model.to(dataset.device)
 
-    optimizer = optim.Adam(model.parameters(),lr=0.001)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.95)
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=args.learning_rate
+    )
+
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer, 
+        step_size=args.scheduler_step, 
+        gamma=args.gamma
+    )
 
     criterion = nn.CrossEntropyLoss(weight=class_weights)
 
@@ -152,7 +218,7 @@ if __name__ == "__main__":
         test_loader, 
         optimizer, 
         criterion, 
-        n_epochs=1
+        n_epochs=args.n_epochs
     )
 
     ####################################### Plots #######################################
