@@ -1,15 +1,6 @@
-import torch
 import torch.nn as nn
 
 from NetworkModules import RefineModule, ResidualBottleneckModule, BilinearResizeModule, BottleneckReductionModule
-
-
-use_cuda = torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda else "cpu")
-dtype_device = torch.cuda.FloatTensor if device.type == 'cuda' else torch.FloatTensor
-print("\n*** Device *** :: ",device)
-
-
 
 class EdgeSegNet(nn.Module):
 

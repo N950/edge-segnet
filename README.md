@@ -1,6 +1,6 @@
 # EdgeSegNet - Pytorch
 
-An implementation of [EdgeSegNet](https://arxiv.org/abs/1905.04222) in Pytorch 
+An implementation of [EdgeSegNet](https://arxiv.org/abs/1905.04222) in Pytorch, 
 [CamSeg01](http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamSeq01/) dataset is used for training
 
 Repo containes :
